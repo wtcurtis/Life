@@ -2,7 +2,9 @@
     this.x = x;
     this.y = y;
     this.wrap = wrap;
-    this.board = board || new Uint8Array(x*y);
+    this.boards = [new Uint8Array(x*y), new Uint8Array(x*y)];
+    this.board = this.boards[0];
+    this.calcBoard = this.boards[1];
     this.prevCols = [0, 0];
 }
 
@@ -29,8 +31,7 @@ life.prototype.neighbors = function(xp, yp) {
 }
 
 life.prototype.step = function() {
-    var nBoard = new Uint8Array(this.x*this.y),
-        neigh;
+    var neigh;
     
     for(var i = 0; i < this.x; i++) {
         for(var j = 0; j < this.y; j++) {
@@ -39,23 +40,25 @@ life.prototype.step = function() {
                 switch(neigh) {
                     case 0:
                     case 1:
-                        nBoard[j*this.x+i] = 0;
+                        this.calcBoard[j*this.x+i] = 0;
                         break;
                     case 2:
                     case 3:
-                        nBoard[j*this.x+i] = 1;
+                        this.calcBoard[j*this.x+i] = 1;
                         break;
                     default:
-                        nBoard[j*this.x+i] = 0;
+                        this.calcBoard[j*this.x+i] = 0;
                         break;
                 }
             } else {
-                nBoard[j*this.x+i] = (neigh == 3 ? 1 : 0);
+                this.calcBoard[j*this.x+i] = (neigh == 3 ? 1 : 0);
             }
         }
     }
     
-    this.board = nBoard;
+    var tempBoard = this.board;
+    this.board = this.calcBoard;
+    this.calcBoard = tempBoard;
 }
 
 life.prototype.randomize = function() {
