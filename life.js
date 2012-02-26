@@ -29,7 +29,6 @@ life.prototype.neighbors = function(xp, yp) {
 }
 
 life.prototype.step = function() {
-    var before = new Date();
     var nBoard = new Uint8Array(this.x*this.y),
         neigh;
     
@@ -57,7 +56,6 @@ life.prototype.step = function() {
     }
     
     this.board = nBoard;
-    var after = new Date();
 }
 
 life.prototype.randomize = function() {
