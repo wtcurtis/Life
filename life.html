@@ -5,10 +5,70 @@
 <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="life.js"></script>
 <script type="text/javascript">
-$(document).ready(function() { init(); $('#lifecan').click(l.Click); animate(); } );
+$(document).ready(function() { 
+        var ruleHandler = function(type, n, add, lifeBoard){
+            if(add) {
+                lifeBoard.addRule(type, n);
+            } else {
+                lifeBoard.removeRule(type, n);
+            }
+        }
+
+        init(); 
+        $('#lifecan').click(l.Click); 
+        //animate(); 
+        var bornEl = $('#born'),
+            survEl = $('#survive'),
+            opEl;
+
+        for(var i = 0; i < 9; i++) {
+            $('<option value="' + i + '">' + i + '</option>').appendTo(bornEl);
+            $('<option value="' + i + '">' + i + '</option>').appendTo(survEl);
+        }
+
+        $('#born').change(function() {
+            $('#born option').each(function(i, el) {
+                ruleHandler('born', i, el.selected, l);
+                });
+            });
+        $('#survive').change(function() {
+            $('#survive option').each(function(i, el) {
+                ruleHandler('survive', i, el.selected, l);
+                });
+            });
+            
+        $('#born option').each(function(i, el) {
+            el.selected = l.rules['born'][i] == 1;
+        });
+        $('#survive option').each(function(i, el) {
+            el.selected = l.rules['survive'][i] == 1;
+        });
+        $('#randomize').click(function() { l.randomize(); });
+        $('#clear').click(function() { l.clear(); });
+        $('#stripe').click(function() { l.stripe(); });
+        $('#step').click(function() { l.step(); l.draw(c, imageData);});
+        $('#stop').click(function() { l.living = false; });
+        $('#go').click(function() { 
+                if(!l.living) { l.living = true; l.go(10); }
+        });
+        $('#wrap').click(function() {
+                l.wrap = this.checked;
+                });
+    });
 </script>
 </head>
 <body>
-<canvas id="lifecan" width="200" height="200"></canvas>
+    <canvas id="lifecan" width="600" height="200"></canvas>
+    <div id="controls">
+        <select multiple="multiple" size="9" id="born"></select>
+        <select multiple="multiple" size="9" id="survive"></select>
+        <input type="button" value="Randomize" id="randomize">
+        <input type="button" value="Clear" id="clear">
+        <input type="button" value="Stripe" id="stripe">
+        <input type="button" value="Stop" id="stop">
+        <input type="button" value="Go" id="go">
+        <input type="button" value="Step" id="step">
+        <input type="checkbox" id="wrap">Wrap
+    </div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿life = function(x, y, wrap, board) {
+﻿life = function(x, y, wrap, board, rules) {
     this.x = x;
     this.y = y;
     this.wrap = wrap;
@@ -6,6 +6,24 @@
     this.board = this.boards[0];
     this.calcBoard = this.boards[1];
     this.prevCols = [0, 0];
+    this.rules = rules || {
+        'born': [0,0,0,1,0,0,0,0,0,0], 'survive': [0,0,1,1,0,0,0,0,0,0]};
+    this.living = false;
+}
+
+life.prototype.arrayContains = function(arr, n) {
+    for(var i = 0; i < arr.length; i++) {
+        if(arr[i] === n) return true;
+    }
+    return false;
+}
+
+life.prototype.addRule = function(type, n) {
+    this.rules[type][n] = 1;
+}
+
+life.prototype.removeRule = function(type, n) {
+    this.rules[type][n] = 0;
 }
 
 life.prototype.neighbors = function(xp, yp) {
@@ -31,28 +49,15 @@ life.prototype.neighbors = function(xp, yp) {
 }
 
 life.prototype.step = function() {
-    var neigh;
+    var neigh, hit;
     
     for(var i = 0; i < this.x; i++) {
         for(var j = 0; j < this.y; j++) {
             neigh = this.neighbors(i, j);
-            if(this.board[j*this.x+i]) {
-                switch(neigh) {
-                    case 0:
-                    case 1:
-                        this.calcBoard[j*this.x+i] = 0;
-                        break;
-                    case 2:
-                    case 3:
-                        this.calcBoard[j*this.x+i] = 1;
-                        break;
-                    default:
-                        this.calcBoard[j*this.x+i] = 0;
-                        break;
-                }
-            } else {
-                this.calcBoard[j*this.x+i] = (neigh == 3 ? 1 : 0);
-            }
+            hit = false;
+            this.calcBoard[j*this.x+i] = this.board[j*this.x+i]
+                ? (this.rules['survive'][neigh] ? 1 : 0)
+                : (this.rules['born'][neigh] ? 1 : 0);
         }
     }
     
@@ -62,8 +67,22 @@ life.prototype.step = function() {
 }
 
 life.prototype.randomize = function() {
-    for(var i = 0; i < this.x*this.y; i++) {
-        this.board[i] = (Math.random() > .5 ? 1 : 0);
+    this.setBoard(function() { return Math.random() > .5 ? 1 : 0; });
+}
+
+life.prototype.stripe = function() {
+    this.setBoard(function(x, y) { return y % 20 ? 0 : 1; });
+}
+
+life.prototype.clear = function() {
+    this.setBoard(function() { return 0; });
+}
+
+life.prototype.setBoard = function(cb) {
+    for(var i = 0; i < this.x; i++) {
+        for(var j = 0; j < this.y; j++) {
+            this.board[j*this.x+i] = cb(i, j);
+        }
     }
 }
 
@@ -116,6 +135,19 @@ life.prototype.Click = function(event){
     l.board[canvasY*l.x+canvasX+1] = 1;
     l.board[(canvasY+1)*l.x+canvasX] = 1;
     l.board[(canvasY+1)*l.x+canvasX+1] = 1;
+}
+
+life.prototype.go = function(ms) {
+    this.step();
+    this.draw(c, imageData);
+    var that = this;
+    if(this.living) { 
+        setTimeout(function() { that.go(ms) }, ms);
+    }
+}
+
+life.prototype.stop = function() {
+    this.living = false;
 }
 
 var init = function() {
