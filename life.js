@@ -12,6 +12,67 @@
     this.activeBrush = life.brushes.glider;
 }
 
+life.parseFirstRleLine = function(line) {
+    var captures = line.match(/x\s*=\s*(\d+)[,\s]*y\s*=\s*(\d+)[,\s]*rule\s*=\s*B?(\d+)\/S?(\d+)\s*/i);
+    return captures == null ? null
+        : {x: captures[1], y: captures[2], b: captures[3], s: captures[4]};
+}
+
+life.repeat = function(n, x) {
+    var arr = [];
+    for(var i = 0; i < x; i++) {
+        arr.push(n);
+    }
+    return arr;
+}
+
+life.parseRleLine = function(line, x, y) {
+    var run = '', pattern = [], curPattern = [],
+        runVals = {'b':0, 'o':1},
+        pushCurrent = function() {
+           if(curPattern.length < x) {
+               life.repeat(0, (x - curPattern.length)).map(function(n) {
+                   return curPattern.push(n);
+               });
+           }
+           pattern.push(curPattern);
+           curPattern = [];
+        };
+
+    for(var i = 0; i < line.length; i++) {
+       if(line[i] == 'b' || line[i] == 'o') {
+           run = (run === '' ? 1 : parseInt(run, 10));
+           life.repeat(runVals[line[i]], run).map(function(n) {
+               return curPattern.push(n);
+           });
+           run = '';
+       } else if(line[i] == '$') {
+           pushCurrent();
+       } else if(line[i].match(/\d/)) {
+           run += line[i];
+       } else if(line[i] == '!') {
+           pushCurrent();
+       } else {
+           throw "Invalid RLE";
+       }
+    }
+    return pattern;
+}
+
+
+
+life.parseRle = function(rle) {
+    var rleSpec, rleLines;
+    rleLines = rle.split('\n');
+
+    if(rleLines.length < 2) { return null; }
+    rleSpec = life.parseFirstRleLine(rleLines[0]);
+    rleLines = rleLines.slice(1).map(function(n) { return n.trim() }).join('');
+
+    return life.parseRleLine(rleLines, rleSpec.x, rleSpec.y);
+}
+
+
 life.brushes = {
     'block': [ [1,1],[1,1] ],
     'glider': [ [0,1,0],[0,0,1],[1,1,1] ],
@@ -187,6 +248,16 @@ life.prototype.draw = function(context, imageData) {
     context.putImageData(imageData, 0, 0);
 }
 
+life.prototype.paintPattern = function(x, y, pat) {
+    for(var i = 0; i < pat.length; i++) {
+        for(var j = 0; j < pat[i].length; j++) {
+            this.board[(y+i)*l.x+(x+j)] = 
+                pat[i][j];
+        }
+    }
+}
+
+
 life.prototype.Click = function(event, that){
     var totalOffsetX = 0;
     var totalOffsetY = 0;
@@ -203,13 +274,7 @@ life.prototype.Click = function(event, that){
     canvasX = event.pageX - totalOffsetX;
     canvasY = event.pageY - totalOffsetY;
 
-    for(var i = 0; i < this.activeBrush.length; i++) {
-        for(var j = 0; j < this.activeBrush[i].length; j++) {
-            this.board[(canvasY+i)*l.x+(canvasX+j)] = 
-                this.activeBrush[i][j];
-        }
-    }
-
+    this.paintPattern(canvasX, canvasY, this.activeBrush);
 }
 
 life.prototype.go = function(ms) {
