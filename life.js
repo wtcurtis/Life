@@ -37,6 +37,7 @@ life.parseRleLine = function(line, x, y) {
            }
            pattern.push(curPattern);
            curPattern = [];
+           run = '';
         };
 
     for(var i = 0; i < line.length; i++) {
