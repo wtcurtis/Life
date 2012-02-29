@@ -15,15 +15,19 @@ $(document).ready(function() {
         }
 
         init(); 
-        $('#lifecan').click(l.Click); 
+        $('#lifecan').click(function(e) { l.Click(e,this); }); 
         //animate(); 
         var bornEl = $('#born'),
             survEl = $('#survive'),
+            brushEl = $('#brush'),
             opEl;
 
         for(var i = 0; i < 9; i++) {
             $('<option value="' + i + '">' + i + '</option>').appendTo(bornEl);
             $('<option value="' + i + '">' + i + '</option>').appendTo(survEl);
+        }
+        for(var k in life.brushes) {
+            $('<option value="' + k + '">' + k + '</option>').appendTo(brushEl);
         }
 
         $('#born').change(function() {
@@ -36,6 +40,11 @@ $(document).ready(function() {
                 ruleHandler('survive', i, el.selected, l);
                 });
             });
+        $('#brush').change(function() {
+            var b = $('#brush option:selected')[0].value;
+            l.activeBrush = life.brushes[b]; 
+            });
+
             
         $('#born option').each(function(i, el) {
             el.selected = l.rules['born'][i] == 1;
@@ -58,10 +67,11 @@ $(document).ready(function() {
 </script>
 </head>
 <body>
-    <canvas id="lifecan" width="600" height="200"></canvas>
+    <canvas id="lifecan" width="200" height="200"></canvas>
     <div id="controls">
         <select multiple="multiple" size="9" id="born"></select>
         <select multiple="multiple" size="9" id="survive"></select>
+        <select size="9" id="brush"></select>
         <input type="button" value="Randomize" id="randomize">
         <input type="button" value="Clear" id="clear">
         <input type="button" value="Stripe" id="stripe">
